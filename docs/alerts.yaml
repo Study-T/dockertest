@@ -1,0 +1,37 @@
+# Webhook Alert Rules
+# Deploy to Prometheus Alertmanager
+
+groups:
+  - name: webhook_alerts
+    rules:
+      - alert: WebhookHighFailureRate
+        expr: rate(webhook_requests_total{status="error"}[5m]) / rate(webhook_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Webhook failure rate > 5%"
+
+      - alert: WebhookHighLatency
+        expr: histogram_quantile(0.95, rate(webhook_latency_seconds_bucket[5m])) > 10
+        for: 5m
+        labels:
+          severity: P2
+        annotations:
+          summary: "Webhook P95 latency > 10s"
+
+      - alert: CacheWriteFailureRate
+        expr: rate(webhook_requests_total{status="error"}[5m]) > 0.01
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Cache write failure rate > 1%"
+
+      - alert: ServiceDown
+        expr: up{job="ns-tracking-go"} == 0
+        for: 3m
+        labels:
+          severity: P0
+        annotations:
+          summary: "ns-tracking-go service is down"

@@ -1,0 +1,39 @@
+run:
+  timeout: 5m
+  modules-download-mode: readonly
+
+linters:
+  enable:
+    - gofmt
+    - goimports
+    - govet
+    - errcheck
+    - staticcheck
+    - gosimple
+    - ineffassign
+    - unused
+    - misspell
+    - unconvert
+    - gocritic
+    - revive
+  disable:
+    - gocyclo
+    - dupl
+
+linters-settings:
+  goimports:
+    local-prefixes: ns-tracking-go
+  revive:
+    rules:
+      - name: blank-imports
+      - name: context-as-argument
+      - name: error-return
+      - name: error-strings
+      - name: exported
+      - name: var-naming
+        disabled: true
+
+issues:
+  exclude-use-default: false
+  max-issues-per-linter: 0
+  max-same-issues: 0

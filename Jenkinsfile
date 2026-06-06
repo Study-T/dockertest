@@ -11,18 +11,19 @@ pipeline {
             }
         }
 
-        stage('安装依赖 + 运行测试') {
+        stage('运行测试') {
             agent {
                 docker {
-                    image 'python:3.12-slim'
+                    image 'golang:1.25-alpine'
                     args '--network host'
                 }
             }
             steps {
                 unstash 'source'
                 sh '''
-                    pip install --no-cache-dir -r requirements.txt
-                    pytest test_app.py -v
+                    apk add --no-cache git gcc musl-dev
+                    go work sync
+                    go test ./... -v -count=1
                 '''
             }
         }
@@ -31,7 +32,7 @@ pipeline {
             agent any
             steps {
                 unstash 'source'
-                sh 'docker build -t dockertest:latest .'
+                sh 'docker build -t tracking-api:latest .'
             }
         }
 
@@ -39,13 +40,19 @@ pipeline {
             agent any
             steps {
                 sh '''
-                    docker stop dockertest || true
-                    docker rm dockertest || true
-                    docker run -d \
-                        --name dockertest \
-                        -p 9090:8000 \
-                        --restart unless-stopped \
-                        dockertest:latest
+                    docker compose down || true
+                    docker compose up -d --build
+                '''
+            }
+        }
+
+        stage('运行数据库迁移') {
+            agent any
+            steps {
+                sh '''
+                    sleep 5
+                    docker cp infrastructure/database/migration/001_create_raw_events.sql tracking-postgres:/tmp/migration.sql
+                    docker exec tracking-postgres psql -U postgres -d your_database -f /tmp/migration.sql
                 '''
             }
         }
@@ -54,9 +61,9 @@ pipeline {
             agent any
             steps {
                 sh '''
-                    sleep 3
-                    docker exec dockertest python -c "import urllib.request; r=urllib.request.urlopen('http://localhost:8000/health'); print(r.read().decode())"
-                    echo "==> 应用已成功部署，访问地址: http://localhost:9090"
+                    sleep 10
+                    docker exec tracking-api wget -qO- http://localhost:8082/health || echo "健康检查失败，查看日志: docker logs tracking-api"
+                    echo "==> 应用已成功部署，访问地址: http://localhost:8082"
                 '''
             }
         }
@@ -64,7 +71,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ 流水线执行成功！应用已部署到本地 Docker'
+            echo '✅ 流水线执行成功！Go 应用已部署到本地 Docker'
         }
         failure {
             echo '❌ 流水线执行失败，请检查控制台输出'

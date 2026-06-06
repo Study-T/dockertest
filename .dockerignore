@@ -1,3 +1,13 @@
-__pycache__
-*.pyc.git.venv
-test_app.py
+.git
+.gitignore
+.idea
+.vscode
+*.md
+tests/
+docs/
+scripts/
+*.test
+*.out
+tmp/
+logs/
+.env
