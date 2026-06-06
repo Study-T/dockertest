@@ -44,6 +44,7 @@ pipeline {
         stage('部署到本地 Docker') {
             agent any
             steps {
+                unstash 'source'
                 sh '''
                     # 清理占用端口的容器
                     docker ps -q --filter "publish=5432" | xargs -r docker rm -f
