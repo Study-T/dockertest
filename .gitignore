@@ -5,7 +5,6 @@
 *.dylib
 *.test
 *.out
-go.work
 vendor/
 build/
 dist/
