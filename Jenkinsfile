@@ -81,18 +81,18 @@ pipeline {
                     docker cp infrastructure/database/migration/001_create_raw_events.sql tracking-postgres:/tmp/migration.sql
                     docker exec tracking-postgres psql -U postgres -d ns_tracking -f /tmp/migration.sql || true
 
-                    # 启动应用
+                    # 复制配置文件到本地目录
+                    mkdir -p /tmp/tracking-config
+                    cp app/etc/app-docker.yaml /tmp/tracking-config/app.yaml
+
+                    # 启动应用（挂载配置文件）
                     docker run -d \
                         --name tracking-api \
                         --network tracking-network \
                         -p 8082:8082 \
+                        -v /tmp/tracking-config/app.yaml:/etc/app/app.yaml \
                         --restart unless-stopped \
                         tracking-api:latest
-
-                    # 复制配置文件到容器
-                    sleep 2
-                    docker cp app/etc/app-docker.yaml tracking-api:/etc/app/app.yaml
-                    docker restart tracking-api
                 '''
             }
         }
