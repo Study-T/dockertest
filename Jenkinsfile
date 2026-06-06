@@ -54,9 +54,8 @@ pipeline {
             agent any
             steps {
                 sh '''
-                    sleep 5
-                    docker exec dockertest curl -sf http://localhost:8000/health || exit 1
-                    echo ""
+                    sleep 3
+                    docker exec dockertest python -c "import urllib.request; r=urllib.request.urlopen('http://localhost:8000/health'); print(r.read().decode())"
                     echo "==> 应用已成功部署，访问地址: http://localhost:9090"
                 '''
             }
