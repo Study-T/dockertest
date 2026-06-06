@@ -86,9 +86,13 @@ pipeline {
                         --name tracking-api \
                         --network tracking-network \
                         -p 8082:8082 \
-                        -v $(pwd)/app/etc/app-docker.yaml:/etc/app/app.yaml \
                         --restart unless-stopped \
                         tracking-api:latest
+
+                    # 复制配置文件到容器
+                    sleep 2
+                    docker cp app/etc/app-docker.yaml tracking-api:/etc/app/app.yaml
+                    docker restart tracking-api
                 '''
             }
         }
