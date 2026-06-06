@@ -24,10 +24,10 @@ pipeline {
                     apk add --no-cache git gcc musl-dev
                     export GOWORK=$(pwd)/go.work
                     go work sync
-                    cd app && go test ./... -v -count=1
-                    cd ../domain/tracking && go test ./... -v -count=1
-                    cd ../infrastructure && go test ./... -v -count=1
-                    cd ../pkg && go test ./... -v -count=1
+                    cd app && go test ./... -v -count=1 && cd ..
+                    cd domain/tracking && go test ./... -v -count=1 && cd ..
+                    cd infrastructure && go test ./... -v -count=1 && cd ..
+                    cd pkg && go test ./... -v -count=1
                 '''
             }
         }
