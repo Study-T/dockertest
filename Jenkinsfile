@@ -57,7 +57,7 @@ pipeline {
                 sh '''
                     sleep 5
                     docker cp infrastructure/database/migration/001_create_raw_events.sql tracking-postgres:/tmp/migration.sql
-                    docker exec tracking-postgres psql -U postgres -d your_database -f /tmp/migration.sql
+                    docker exec tracking-postgres psql -U postgres -d ns_tracking -f /tmp/migration.sql
                 '''
             }
         }

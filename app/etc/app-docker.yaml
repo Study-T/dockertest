@@ -1,0 +1,44 @@
+Name: tracking-api
+Host: 0.0.0.0
+Port: 8082
+
+# PostgreSQL (Docker network)
+DataSource: "postgres://postgres:123456@postgres:5432/ns_tracking?sslmode=disable"
+
+# Redis (Docker network)
+RedisConf:
+  Host: redis:6379
+  Pass: ""
+  Db: 0
+
+# CORS
+CORS:
+  AllowedOrigins:
+    - "*"
+  AllowedMethods:
+    - GET
+    - POST
+
+# Webhook
+Webhook:
+  EncryptKey: ""
+  ReplayWindow: 300000
+  MaxPayloadSize: 1048576
+
+# Grayscale
+Grayscale:
+  Enabled: true
+  Mode: all
+  Whitelist: ""
+  Percentage: 100
+
+# Sync
+Sync:
+  IntervalMinutes: 60
+  BatchSize: 100
+
+# Retry
+Retry:
+  IntervalMinutes: 5
+  MaxRetries: 5
+  BatchSize: 50
