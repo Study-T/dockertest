@@ -3,8 +3,7 @@ pipeline {
 
     environment {
         APP_NAME    = 'dockertest'
-        IMAGE_TAG   = "\:\"
-        IMAGE_LATEST = "\:latest"
+        IMAGE_LATEST = 'dockertest:latest'
         APP_PORT    = '9090'
     }
 
@@ -27,20 +26,20 @@ pipeline {
 
         stage('构建 Docker 镜像') {
             steps {
-                sh "docker build -t \ -t \ ."
+                sh "docker build -t  ."
             }
         }
 
         stage('部署到本地 Docker') {
             steps {
                 sh '''
-                    docker stop \ || true
-                    docker rm \ || true
+                    docker stop dockertest || true
+                    docker rm dockertest || true
                     docker run -d \
-                        --name \ \
-                        -p \:8000 \
+                        --name dockertest \
+                        -p 9090:8000 \
                         --restart unless-stopped \
-                        \
+                        dockertest:latest
                 '''
             }
         }
@@ -49,9 +48,9 @@ pipeline {
             steps {
                 sh '''
                     sleep 3
-                    curl -sf http://localhost:\/health || exit 1
+                    curl -sf http://localhost:9090/health || exit 1
                     echo ""
-                    echo "==> 应用已成功部署，访问地址: http://localhost:\"
+                    echo "==> 应用已成功部署，访问地址: http://localhost:9090"
                 '''
             }
         }
@@ -63,9 +62,6 @@ pipeline {
         }
         failure {
             echo '❌ 流水线执行失败，请检查控制台输出'
-        }
-        always {
-            sh 'docker images \ --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}"'
         }
     }
 }
