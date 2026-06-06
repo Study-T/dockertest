@@ -81,6 +81,51 @@ pipeline {
                     docker cp infrastructure/database/migration/001_create_raw_events.sql tracking-postgres:/tmp/migration.sql
                     docker exec tracking-postgres psql -U postgres -d ns_tracking -f /tmp/migration.sql || true
 
+                    # 获取 Redis 和 PostgreSQL 的 IP 地址
+                    REDIS_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tracking-redis)
+                    POSTGRES_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' tracking-postgres)
+
+                    # 创建配置文件
+                    cat > /tmp/app.yaml <<EOF
+Name: tracking-api
+Host: 0.0.0.0
+Port: 8082
+
+DataSource: "postgres://postgres:123456@${POSTGRES_IP}:5432/ns_tracking?sslmode=disable"
+
+RedisConf:
+  Host: "${REDIS_IP}:6379"
+  Pass: ""
+  Db: 0
+
+CORS:
+  AllowedOrigins:
+    - "*"
+  AllowedMethods:
+    - GET
+    - POST
+
+Webhook:
+  EncryptKey: ""
+  ReplayWindow: 300000
+  MaxPayloadSize: 1048576
+
+Grayscale:
+  Enabled: true
+  Mode: all
+  Whitelist: ""
+  Percentage: 100
+
+Sync:
+  IntervalMinutes: 60
+  BatchSize: 100
+
+Retry:
+  IntervalMinutes: 5
+  MaxRetries: 5
+  BatchSize: 50
+EOF
+
                     # 启动应用
                     docker run -d \
                         --name tracking-api \
@@ -91,7 +136,7 @@ pipeline {
 
                     # 等待容器启动，然后复制配置文件
                     sleep 3
-                    docker cp app/etc/app-docker.yaml tracking-api:/etc/app/app.yaml
+                    docker cp /tmp/app.yaml tracking-api:/etc/app/app.yaml
                     docker restart tracking-api
                 '''
             }
