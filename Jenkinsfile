@@ -54,8 +54,8 @@ pipeline {
             agent any
             steps {
                 sh '''
-                    sleep 3
-                    curl -sf http://localhost:9090/health || exit 1
+                    sleep 5
+                    docker exec dockertest curl -sf http://localhost:8000/health || exit 1
                     echo ""
                     echo "==> 应用已成功部署，访问地址: http://localhost:9090"
                 '''
