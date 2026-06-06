@@ -45,7 +45,10 @@ pipeline {
             agent any
             steps {
                 sh '''
-                    # 清理旧容器
+                    # 清理占用端口的容器
+                    docker ps -q --filter "publish=5432" | xargs -r docker rm -f
+                    docker ps -q --filter "publish=6379" | xargs -r docker rm -f
+                    docker ps -q --filter "publish=8082" | xargs -r docker rm -f
                     docker rm -f tracking-api tracking-postgres tracking-redis 2>/dev/null || true
 
                     # 创建网络
