@@ -45,19 +45,46 @@ pipeline {
             agent any
             steps {
                 sh '''
-                    docker-compose down || true
-                    docker-compose up -d --build
-                '''
-            }
-        }
+                    # 清理旧容器
+                    docker rm -f tracking-api tracking-postgres tracking-redis 2>/dev/null || true
 
-        stage('运行数据库迁移') {
-            agent any
-            steps {
-                sh '''
+                    # 创建网络
+                    docker network create tracking-network 2>/dev/null || true
+
+                    # 启动 PostgreSQL
+                    docker run -d \
+                        --name tracking-postgres \
+                        --network tracking-network \
+                        -e POSTGRES_USER=postgres \
+                        -e POSTGRES_PASSWORD=123456 \
+                        -e POSTGRES_DB=ns_tracking \
+                        -p 5432:5432 \
+                        -v postgres_data:/var/lib/postgresql/data \
+                        postgres:14-alpine
+
+                    # 启动 Redis
+                    docker run -d \
+                        --name tracking-redis \
+                        --network tracking-network \
+                        -p 6379:6379 \
+                        -v redis_data:/data \
+                        redis:6-alpine
+
+                    # 等待数据库就绪
                     sleep 5
+
+                    # 运行数据库迁移
                     docker cp infrastructure/database/migration/001_create_raw_events.sql tracking-postgres:/tmp/migration.sql
-                    docker exec tracking-postgres psql -U postgres -d ns_tracking -f /tmp/migration.sql
+                    docker exec tracking-postgres psql -U postgres -d ns_tracking -f /tmp/migration.sql || true
+
+                    # 启动应用
+                    docker run -d \
+                        --name tracking-api \
+                        --network tracking-network \
+                        -p 8082:8082 \
+                        -v $(pwd)/app/etc/app-docker.yaml:/etc/app/app.yaml \
+                        --restart unless-stopped \
+                        tracking-api:latest
                 '''
             }
         }
