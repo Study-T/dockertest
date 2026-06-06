@@ -22,12 +22,13 @@ pipeline {
                 unstash 'source'
                 sh '''
                     apk add --no-cache git gcc musl-dev
-                    export GOWORK=$(pwd)/go.work
+                    ROOT=$(pwd)
+                    export GOWORK=$ROOT/go.work
                     go work sync
-                    cd app && go test ./... -v -count=1 && cd ..
-                    cd domain/tracking && go test ./... -v -count=1 && cd ..
-                    cd infrastructure && go test ./... -v -count=1 && cd ..
-                    cd pkg && go test ./... -v -count=1
+                    cd $ROOT/app && go test ./... -v -count=1
+                    cd $ROOT/domain/tracking && go test ./... -v -count=1
+                    cd $ROOT/infrastructure && go test ./... -v -count=1
+                    cd $ROOT/pkg && go test ./... -v -count=1
                 '''
             }
         }
