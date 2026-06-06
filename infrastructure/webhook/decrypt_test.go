@@ -56,10 +56,10 @@ func TestDecryptAES_WrongKey(t *testing.T) {
 	encrypted := encryptForTest(t, plaintext, "correct-key")
 	encoded := base64.StdEncoding.EncodeToString(encrypted)
 
-	_, err := DecryptAES(encoded, "wrong-key")
-	// Wrong key produces garbage with invalid padding
-	if err == nil {
-		t.Fatal("expected error for wrong key, got nil")
+	result, err := DecryptAES(encoded, "wrong-key")
+	// Wrong key: either padding error or garbage output
+	if err == nil && string(result) == string(plaintext) {
+		t.Fatal("wrong key should not produce correct plaintext")
 	}
 }
 
