@@ -22,6 +22,7 @@ pipeline {
                 unstash 'source'
                 sh '''
                     apk add --no-cache git gcc musl-dev
+                    export GOWORK=$(pwd)/go.work
                     go work sync
                     go test ./... -v -count=1
                 '''
